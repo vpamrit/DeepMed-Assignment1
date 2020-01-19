@@ -20,10 +20,14 @@ def read_txt(root_dir, labels_file):
     labels = [ [line.split(' ',1)[0], float(line.split(' ',2)[1]), float(line.split(' ',2)[2])] for line in open(labels_file) if (line.split(' ',1)[0] in files)]
     labels = sorted(labels, key=lambda tup: int(tup[0].split('.',1)[0]))
 
+    if len(labels) == 0:
+        labels = [ [f.split(' ', 1)[0], float(0.0), float(0.0)] for f in files ]
+
     return np.array(labels)
 
 class PhoneDataset(Dataset):
     def __init__(self, labels_file, root_dir, transform=None):
+        print("YOHO")
         self.labels = read_txt(root_dir, labels_file)
         self.root_dir = root_dir
         self.transform = transform
@@ -42,6 +46,7 @@ class PhoneDataset(Dataset):
         # numpy is W x H x C
         # torch is C x H x W
         image = torch.from_numpy(image.transpose((2, 0, 1)))
+
 
         target = torch.from_numpy(self.labels[idx, 1:3].astype('float').reshape(-1,2))
 
