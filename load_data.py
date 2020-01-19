@@ -27,7 +27,6 @@ def read_txt(root_dir, labels_file):
 
 class PhoneDataset(Dataset):
     def __init__(self, labels_file, root_dir, transform=None):
-        print("YOHO")
         self.labels = read_txt(root_dir, labels_file)
         self.root_dir = root_dir
         self.transform = transform
