@@ -36,9 +36,14 @@ class TestVisualizer:
 
     return pow(pow(self.pred[0]-self.actual[0], 2) + pow(self.pred[1] - self.actual[1], 2), 1/2)
 
-  def show_image(self):
+  def show_image(self, desktop=False):
     im = self.prep_image()
-    im.show()
+
+    if desktop:
+        im.show()
+        return
+
+    im
 
   def save_image(self, save_path):
     im = self.prep_image()
