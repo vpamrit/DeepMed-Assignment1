@@ -26,11 +26,10 @@ def read_txt(root_dir, labels_file):
     return np.array(labels)
 
 class PhoneDataset(Dataset):
-    def __init__(self, labels_file, root_dir, test=False, transform=None):
+    def __init__(self, labels_file, root_dir, transform=None):
         self.labels = read_txt(root_dir, labels_file)
         self.root_dir = root_dir
         self.transform = transform
-        self.test = test
 
     def __len__(self):
         return len(self.labels)
@@ -43,9 +42,6 @@ class PhoneDataset(Dataset):
                                self.labels[idx][0])
         image = io.imread(img_name)
 
-        if self.test:
-            print(img_name)
-
         # numpy is W x H x C
         # torch is C x H x W
         image = torch.from_numpy(image.transpose((2, 0, 1)))
@@ -54,4 +50,23 @@ class PhoneDataset(Dataset):
         target = torch.from_numpy(self.labels[idx, 1:3].astype('float').reshape(-1,2))
 
         return image, target.squeeze()
+
+    def get_labels(self, idx):
+         if torch.is_tensor(idx):
+             idx = idx.tolist()
+
+         img_name = os.path.join(self.root_dir,
+                                self.labels[idx][0])
+         image = io.imread(img_name)
+
+         # numpy is W x H x C
+         # torch is C x H x W
+         image = torch.from_numpy(image.transpose((2, 0, 1)))
+         target = self.labels[idx, 1:3].astype('float').reshape(-1,2)
+
+
+
+         return img_name, image, target
+
+
 
