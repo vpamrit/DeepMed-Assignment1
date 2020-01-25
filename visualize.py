@@ -19,11 +19,19 @@ class TestVisualizer:
 
     return
 
-  def prep_image(self):
+  def draw_rect(self, im, val1, val2, color='red'):
+      width, height = im.size
+      radius = 30
+      draw = ImageDraw.Draw(im)
+      draw.rectangle((val1*width-radius, val2*height-radius, val1*width+radius, val2*height+radius), fill=None, outline=color)
+
+  def prep_image(self, drawbox=False):
     im = Image.open(self.image_path)
     width, height = im.size
     val1, val2 = self.actual[0], self.actual[1]
     self.draw_ellipse(im, val1, val2, 'red')
+    if drawbox:
+        self.draw_rect(im, val1, val2, 'red');
     if self.pred != None:
       val1, val2 = self.pred[0], self.pred[1]
       self.draw_ellipse(im, val1, val2, 'blue')
@@ -45,8 +53,8 @@ class TestVisualizer:
 
     im
 
-  def save_image(self, save_path):
-    im = self.prep_image()
+  def save_image(self, save_path, drawbox=False):
+    im = self.prep_image(drawbox)
 
     dirs = re.split("/", save_path)
     directory = ""
