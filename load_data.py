@@ -1,4 +1,5 @@
 import os
+import re
 import torch
 import torchvision
 from skimage import io, transform
@@ -31,11 +32,9 @@ def read_txt(root_dir, labels_file):
     return np.array(labels)
 
 class PhoneDataset(Dataset):
-    def __init__(self, labels_file, root_dir, PILtransforms=None):
+    def __init__(self, labels_file, root_dir):
         self.labels = read_txt(root_dir, labels_file)
         self.root_dir = root_dir
-        self.transforms = transform
-        self.PILtransforms=PILtransforms
 
     def __len__(self):
         return len(self.labels)
@@ -53,9 +52,6 @@ class PhoneDataset(Dataset):
         image = torch.from_numpy(image.transpose((2, 0, 1)))
 
         target = torch.from_numpy(self.labels[idx, 1:3].astype('float').reshape(-1,2).squeeze())
-
-        if self.PILtransforms != None :
-            image, target = self.exec_PIL_transforms(image, target)
 
         return image, target
 
@@ -77,6 +73,43 @@ class PhoneDataset(Dataset):
     def find(self, tensor, values):
         return torch.nonzero(tensor[..., None] == values)
 
+
+#creates new images in a new directory
+#creates a corresponding labels file
+class DatasetBuilder(object):
+    def __init__(self, phone_dataset, result_dir, PILtransforms, generate=1):
+        self.PILtransforms = PILtransforms
+        self.dataset = phone_dataset
+        self.result_dir = result_dir+'/' if result_dir[-1] != '/' else result_dir
+        self.gen = generate
+
+         #ensures the creation of the directory
+        dirs = re.split("/", result_dir)
+        directory = ""
+
+        for i in range(len(dirs)):
+            directory += dirs[i] + "/"
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+    def generate(self):
+        #create labels file
+        labels_file = open(self.result_dir+"../labels.txt", "w")
+
+        #iterate over the dataset and generate the new samples
+        for s_num in range(len(self.dataset)):
+            for i in range(self.gen):
+                img_name, image, label = self.dataset.get_labels(s_num)
+                sample_image, pil_image, new_label = self.exec_PIL_transforms(image, label)
+
+                file_name = self.result_dir+re.split('[/.]', img_name)[-2]+"_"+str(i)+"."+img_name.split('.')[-1]
+                print(file_name)
+                pil_image.save(file_name)
+
+                #write the value to the labels file
+                labels_file.write((file_name.split('/')[-1]+" {:.4f} "+" {:.4f}"+"\n").format(new_label[0,0].item(), new_label[0,1].item()))
+
+        labels_file.close()
 
     # label is a numpy array
     def exec_PIL_transforms(self, image, label, image_name = None):
@@ -114,9 +147,4 @@ class PhoneDataset(Dataset):
 
         new_label = torch.from_numpy(prev_label)
 
-        if image_name == None:
-            image_name = "0.jpg"
-
-        transformed_sample.save("./meatheads/"+image_name)
-
-        return sample_image, new_label
+        return sample_image, transformed_sample, new_label

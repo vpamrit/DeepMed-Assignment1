@@ -48,8 +48,8 @@ class SafeRotate(object):
 #chooses a random crop of the image within specified bounds (achieves a "translation" / crop / rescale)
 class SafeCropRescale(object):
 
-    def __init__(self):
-        self.prob = 1
+    def __init__(self, prob):
+        self.prob = prob
         self.ratio = 326/490 #H/W
         self.minwidth=int(326/3)
         self.minheight=int(490/3)
@@ -67,7 +67,7 @@ class SafeCropRescale(object):
 
 
         xfin = random.randint(xlb, xub)
-        yfin = random.randint(ylb, yub)
+        yfin = random.randint(int(ylb), int(yub))
 
         print("x {} y {}".format(xc, yc))
         print("x {} y {} w {} h {}".format(xfin, yfin, width, height))
