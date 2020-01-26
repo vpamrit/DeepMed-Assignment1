@@ -29,41 +29,161 @@ def findNewLabel(ten):
     return indices.numpy()
 
 
-def findBounds(tensor):
+def findSafeties(ten):
     #this only searches the first channel
-    mincoord = [0, 0]
-    maxcoord = [inf, inf]
     indices = (ten[0] != 0).nonzero().tolist()
-    #for i in range(len(list)):
-    #    if()
+
+    return len(indices)
 
 
 #rotates an image and brute forces a rotation that keeps the image fit within bounds and happy :)
 #work in progress
 class SafeRotate(object):
     def __init__(self):
+        self.starting_pos = [0, 90, 180, 270]
+        self.crop = SafeCropRescale(autoScale=False)
+        self.minwidth=int(326/3)
+        self.minheight=int(490/3)
         return
+
+    #computes coordinates of region after rotation based on the original image
+    def cropp_rotated(image, degrees):
+        x, y = image.size
+        cosA = abs(math.cos(math.radians(degrees)))
+        sinA = abs(math.sin(math.radians(degrees)))
+
+        a = x * cosA
+        b = x * sinA
+
+        relation = a / (a + b)
+        right_indent1 = a - x * relation * cosA
+
+        relation = b / (a + b)
+        bottom_ident1 = b - x * relation *sinA
+
+
+        c = y * cosA
+        d = y * sinA
+
+        relation = c / (c + d)
+        right_indent2 = c - y * relation * cosA
+
+        relation = d / (c + d)
+        bottom_ident2 = d - y * relation *sinA
+
+        right_indent = max(right_indent1, right_indent2)
+        top_indent = max(bottom_ident1, bottom_ident2)
+
+        #size of rotated image:
+        w_rotated = x * cosA + y * sinA
+        h_rotated = y * cosA + x * sinA
+
+
+        box = [
+        int(top_indent),
+        int(right_indent),
+        int(h_rotated - top_indent)+1-top_indent,
+        int(w_rotated - right_indent)-right_indent
+        ]
+
+        return box
+
+    def checkSafety(image, angle, safeties, buf=20):
+
+        box = cropp_rotated(image, angle)
+
+        if box[2] < self.minheight or box[3] < self.minwidth:
+            return False
+
+        rot_img = torchvision.transforms.functional.rotate(image, angle, expand=True, resample=False)
+        count = 0
+
+        for i in range(box[0], box[0]+box[2]):
+            for j in range(box[1], box[1]+box[3]):
+                if rot_img.getpixel((j, i))[0] > 0:
+                    count += 1
+
+        return count >= safeties - buf
+
+
+
+    def __call__(self, x, y, label, safeties):
+        start_pos = self.starting_pos[random.randint(0, 4)]
+
+        x = torchvision.transforms.functional.rotate(x, start_pos)
+        y = torchvision.transforms.functional.rotate(y, start_pos)
+
+        label = findNewLabel(torchvision.transforms.functional.to_tensor(y))
+
+        if start_pos == 90 or start_pos == 180:
+            x, y, label, safeties = SafeCropRescale(x, y, label, safeties)
+
+        possible_angles = [0]
+        for i in xrange(5, 45, 5):
+            theta = i
+            if checkSafety(y, theta, safeties):
+                possible_angles.add(theta)
+            else:
+                break
+
+        for i in xrange(5, 45, 5):
+            theta = -1* i  #adjust for negative numbers
+            if checkSafety(y, theta, safeties):
+                possible_angles.add(theta)
+            else:
+                break
+
+        final_angle = possible_angles[random.randint(0, len(possible_angles))]
+
+        #perform the final operations
+        box = cropp_rotated(x, final_angle)
+
+        x = torchvision.transforms.functional.rotate(x, final_angle, expand=True, resample=False)
+        y = torchvision.transforms.functional.rotate(y, final_angle, expand=True, resample=False)
+        x = torchvision.transforms.functional.crop(x, box[0], box[1], box[2], box[3])
+        y = torchvision.transforms.functional.crop(y, box[0], box[1], box[2], box[3])
+
+
+        label = finalNewLabel(torchvision.transforms.functional.to_tensor(y))
+
+        #image here is actually small (should be passed into safe crop and rescale for more processing)
+
+        return x, y, label, safeties
 
 
 #chooses a random crop of the image within specified bounds (achieves a "translation" / crop / rescale)
 class SafeCropRescale(object):
 
-    def __init__(self, prob):
-        self.prob = prob
+    def __init__(self, autoScale=True):
         self.ratio = 326/490 #H/W
         self.minwidth=int(326/3)
         self.minheight=int(490/3)
+        self.height = 326
+        self.width = 490
+        self.autoScale = autoScale
 
     def computeCropAndRescale(self, x, y, label):
-        xc, yc = int(label[0, 0]*490), int(label[0,1]*326)
-        width = random.randint(self.minwidth, 326)
+        img_width, img_height = x.size
+
+        #if image is too small, simply rescale
+        if(img_width <= self.minwidth or img_height <= self.minheight):
+            x = torchvision.transforms.functional.rescale(x, (self.height, self.width))
+            y = torchvision.transforms.functional.rescale(y, (self.height, self.width))
+
+            return x, y
+
+        #if image is large enough continue with crop/rescale
+        xc, yc = int(label[0, 0]*img_width), int(label[0,1]*img_height)
+        width = random.randint(self.minwidth, img_width)
         height = self.ratio*width
 
+        mbuffer = 30
+
         #compute coordinates of random top right corner for our width and height
-        xlb = max(xc+30-width, 0)
-        xub = min(xc-30, 490-width)
-        ylb = max(yc+30-height, 0)
-        yub = min(yc-30, 325-height)
+        xlb = max(xc+mbuffer-width, 0)
+        xub = min(xc-mbuffer, img_width-width)
+        ylb = max(yc+mbuffer-height, 0)
+        yub = min(yc-mbuffer, img_height-height)
 
 
         xfin = random.randint(xlb, xub)
@@ -72,8 +192,12 @@ class SafeCropRescale(object):
         print("x {} y {}".format(xc, yc))
         print("x {} y {} w {} h {}".format(xfin, yfin, width, height))
 
-        xn = torchvision.transforms.functional.resized_crop(x, yfin, xfin, height, width, (326,490))
-        yn = torchvision.transforms.functional.resized_crop(y, yfin, xfin, height, width, (326,490))
+        xn = torchvision.transforms.functional.crop(x, yfin, xfin, height, width)
+        yn = torchvision.transforms.functional.crop(y, yfin, xfin, height, width)
+
+        if self.autoScale:
+            xn = torchvision.transforms.functional.resize(xn, (self.height, self.width))
+            yn = torchvision.transforms.functional.resize(yn, (self.height, self.width))
 
         return xn, yn
 
@@ -81,10 +205,14 @@ class SafeCropRescale(object):
 
     def __call__(self, x, y, label, safeties):
 
-        if safeties !=-1 and happened(self.prob):
+        if safeties !=-1:
             x,y = self.computeCropAndRescale(x,y,label)
-            label = findNewLabel(torchvision.transforms.functional.to_tensor(y))
-            safeties = -1
+            tensor_label = torchvision.transforms.functional.to_tensor(y)
+            label = findNewLabel(tensor_label)
+
+            if self.autoScale:
+                safeties = findSafeties(tensor_label)
+
 
         return x, y, label, safeties
 
