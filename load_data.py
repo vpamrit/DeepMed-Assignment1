@@ -53,15 +53,14 @@ class PhoneDataset(Dataset):
         # numpy is W x H x C
         # torch is C x H x W
         image = torch.from_numpy(image.transpose((2, 0, 1)))
-
         target = torch.from_numpy(self.labels[idx, 1:3].astype('float').reshape(-1,2).squeeze())
 
         if self.transform:
             image = self.transform(image)
 
         if self.mode == "absolute":
-            target[0,1] *= IMG_HEIGHT
-            target[0,1] *= IMG_HEIGHT
+            target[0] *= image.size()[2]
+            target[1] *= image.size()[1]
 
         return image, target
 
