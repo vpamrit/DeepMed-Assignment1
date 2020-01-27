@@ -33,9 +33,10 @@ def read_txt(root_dir, labels_file):
     return np.array(labels)
 
 class PhoneDataset(Dataset):
-    def __init__(self, labels_file, root_dir):
+    def __init__(self, labels_file, root_dir, transform=None):
         self.labels = read_txt(root_dir, labels_file)
         self.root_dir = root_dir
+        self.transform = transform
 
     def __len__(self):
         return len(self.labels)
@@ -53,6 +54,9 @@ class PhoneDataset(Dataset):
         image = torch.from_numpy(image.transpose((2, 0, 1)))
 
         target = torch.from_numpy(self.labels[idx, 1:3].astype('float').reshape(-1,2).squeeze())
+
+        if self.transform:
+            image = self.transform(image)
 
         return image, target
 
