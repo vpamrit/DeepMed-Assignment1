@@ -16,9 +16,9 @@ from os import listdir
 import visualize
 from visualize import TestVisualizer
 
-def get_data(labels_file, root_dir):
+def get_data(labels_file, root_dir, transform=None):
     return PhoneDataset(labels_file=labels_file,
-                                   root_dir=root_dir)
+                                   root_dir=root_dir, transform=transform)
 
 
 def read_txt(root_dir, labels_file):
