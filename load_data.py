@@ -16,9 +16,9 @@ from os import listdir
 import visualize
 from visualize import TestVisualizer
 
-def get_data(labels_file, root_dir, transform=None):
+def get_data(labels_file, root_dir, transform=None, mode="relative"):
     return PhoneDataset(labels_file=labels_file,
-                                   root_dir=root_dir, transform=transform)
+                                   root_dir=root_dir, transform=transform, mode=mode)
 
 
 def read_txt(root_dir, labels_file):
@@ -33,10 +33,11 @@ def read_txt(root_dir, labels_file):
     return np.array(labels)
 
 class PhoneDataset(Dataset):
-    def __init__(self, labels_file, root_dir, transform=None):
+    def __init__(self, labels_file, root_dir, transform=None, mode="relative"):
         self.labels = read_txt(root_dir, labels_file)
         self.root_dir = root_dir
         self.transform = transform
+        self.mode = mode
 
     def __len__(self):
         return len(self.labels)
@@ -57,6 +58,10 @@ class PhoneDataset(Dataset):
 
         if self.transform:
             image = self.transform(image)
+
+        if self.mode == "absolute":
+            target[0,1] *= IMG_HEIGHT
+            target[0,1] *= IMG_HEIGHT
 
         return image, target
 
