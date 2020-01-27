@@ -27,11 +27,11 @@ class TestVisualizer:
 
   def prep_image(self, drawbox=False):
     im = Image.open(self.image_path)
-    width, height = im.size
     val1, val2 = self.actual[0], self.actual[1]
     self.draw_ellipse(im, val1, val2, 'red')
     if drawbox:
         self.draw_rect(im, val1, val2, 'red');
+
     if self.pred != None:
       val1, val2 = self.pred[0], self.pred[1]
       self.draw_ellipse(im, val1, val2, 'blue')

@@ -100,6 +100,10 @@ class DatasetBuilder(object):
         for s_num in range(len(self.dataset)):
             for i in range(self.gen):
                 img_name, image, label = self.dataset.get_labels(s_num)
+
+                #if img_name != './data/train/16.jpg':
+                #    break
+
                 sample_image, pil_image, new_label = self.exec_PIL_transforms(image, label)
 
                 file_name = self.result_dir+re.split('[/.]', img_name)[-2]+"_"+str(i)+"."+img_name.split('.')[-1]
@@ -125,11 +129,15 @@ class DatasetBuilder(object):
         coordy = int(image.size()[1]*label[0][1])
 
         #safe box for the phone (only in training set => so it stays in bounds yikes)
+        dist = lambda x,y: pow(pow(x[0]-y[0], 2) + pow(x[1]-y[1],2), 0.5) / 9.9
+
         for i in range(29):
             for j in range(29):
-                transformed_label_image.putpixel((coordx-14+i, coordy-14+j), (177, 0, 0))
+                x = [coordx-14+i, coordy-14+j]
+                y = [coordx, coordy]
+                transformed_label_image.putpixel((coordx-14+i, coordy-14+j), (int(255*(1-dist(x,y))), 0, 0))
 
-        transformed_label_image.putpixel((coordx, coordy), (255, 0, 0));
+        transformed_label_image.putpixel((coordx, coordy), (255, 255, 255));
 
         if self.PILtransforms != None:
             for tsfrm in self.PILtransforms:
@@ -138,12 +146,6 @@ class DatasetBuilder(object):
         #transform it
         label_image = torchvision.transforms.functional.to_tensor(transformed_label_image)
         sample_image = torchvision.transforms.functional.to_tensor(transformed_sample)
-
-        ##recompute the label
-        #index = self.find(label_image, torch.FloatTensor([1]))
-        #indices = [element.item() for element in index.flatten()][1:3]
-        #print(self.find(label_image, torch.FloatTensor([0.5])))
-        #y,x = indices[0]/label_image.size()[1], indices[1]/label_image.size()[2]
 
         new_label = torch.from_numpy(prev_label)
 
