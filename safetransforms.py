@@ -160,17 +160,11 @@ class SafeRotate(object):
             return x, y, label, safeties
 
         start_pos = self.starting_pos[random.randint(0, 3)]
-        #start_pos = 0
 
-        print("old label {}".format(label))
-
-        print("START ANGLE {}".format(start_pos))
         x = torchvision.transforms.functional.rotate(x, start_pos, expand=True)
         y = torchvision.transforms.functional.rotate(y, start_pos, expand=True)
 
         label = calculateLabel(y)#findNewLabel(torchvision.transforms.functional.to_tensor(y))
-
-        print("new label {}".format(label))
 
         if start_pos == 90 or start_pos == 270:
             x, y, label, safeties = self.crop(x, y, label, safeties)
@@ -191,8 +185,6 @@ class SafeRotate(object):
                 break
 
         final_angle = possible_angles[random.randint(0, len(possible_angles)-1)]
-
-        print("Final angle {}".format(final_angle))
 
         #perform the final operations
         box = self.cropp_rotated(x, final_angle)
@@ -223,7 +215,6 @@ class SafeCropRescale(object):
 
     def computeCropAndRescale(self, x, y, label):
         img_width, img_height = x.size
-        print("w {} h {}".format(img_width, img_height))
 
         #if image is too small, simply rescale
         if(img_width <= self.minwidth or img_height <= self.minheight):
@@ -235,7 +226,6 @@ class SafeCropRescale(object):
         width = self.crop_width if self.crop_width != None else random.randint(self.minwidth, img_width)
         height = self.ratio*width
 
-        print("minw {} h {} w {}".format(self.minwidth, height, width))
 
         mbuffer = 30
 
@@ -245,15 +235,10 @@ class SafeCropRescale(object):
         ylb = max(yc+mbuffer-height, 0)
         yub = min(yc-mbuffer, img_height-height)
 
-        #print("xlb {} xub {} ylb {} yub {}".format(xlb, xub, ylb, yub))
-        #print("yc {} xc {}".format(yc, xc))
-
 
         xfin = xub if xub <= xlb else random.randint(xlb, xub)
         yfin = yub if yub <= ylb else random.randint(int(ylb), int(yub))
 
-        #print("x {} y {}".format(xc, yc))
-        #print("x {} y {} w {} h {}".format(xfin, yfin, width, height))
 
         xn = torchvision.transforms.functional.crop(x, yfin, xfin, height, width)
         yn = torchvision.transforms.functional.crop(y, yfin, xfin, height, width)
