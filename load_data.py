@@ -78,11 +78,12 @@ class PhoneDataset(Dataset):
 #creates new images in a new directory
 #creates a corresponding labels file
 class DatasetBuilder(object):
-    def __init__(self, phone_dataset, result_dir, PILtransforms, generate=1):
+    def __init__(self, phone_dataset, result_dir, PILtransforms, generate=1, overwrite=True):
         self.PILtransforms = PILtransforms
         self.dataset = phone_dataset
         self.result_dir = result_dir+'/' if result_dir[-1] != '/' else result_dir
         self.gen = generate
+        self.overwrite = overwrite
 
          #ensures the creation of the directory
         dirs = re.split("/", result_dir)
@@ -95,7 +96,13 @@ class DatasetBuilder(object):
 
     def generate(self):
         #create labels file
-        labels_file = open(self.result_dir+"../labels.txt", "w")
+
+        if(self.overwrite):
+            status = "a"
+        else:
+            status="w"
+
+        labels_file = open(self.result_dir+"../labels.txt", status)
 
         #iterate over the dataset and generate the new samples
         for s_num in range(len(self.dataset)):
