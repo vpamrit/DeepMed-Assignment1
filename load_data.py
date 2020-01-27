@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import torch
 import torchvision
@@ -101,10 +102,11 @@ class DatasetBuilder(object):
             for i in range(self.gen):
                 img_name, image, label = self.dataset.get_labels(s_num)
 
-                #if img_name != './data/train/16.jpg':
-                #    break
-
-                sample_image, pil_image, new_label = self.exec_PIL_transforms(image, label)
+                #let the first sample through with no transforms
+                if i != 0:
+                    sample_image, pil_image, new_label = self.exec_PIL_transforms(image, label)
+                else:
+                    sample_image, pil_image, new_label = img_name, torchvision.transforms.functional.to_pil_image(image), label
 
                 file_name = self.result_dir+re.split('[/.]', img_name)[-2]+"_"+str(i)+"."+img_name.split('.')[-1]
                 print(file_name)
@@ -138,9 +140,12 @@ class DatasetBuilder(object):
                 transformed_label_image.putpixel((coordx-14+i, coordy-14+j), (int(255*(1-dist(x,y))), 0, 0))
 
         transformed_label_image.putpixel((coordx, coordy), (255, 255, 255));
+        transforms = self.PILtransforms
 
         if self.PILtransforms != None:
-            for tsfrm in self.PILtransforms:
+            if(random.randint(0,1000) > 500):
+                transforms.reverse()
+            for tsfrm in transforms:
                 transformed_sample, transformed_label_image, prev_label, safety_pixels = tsfrm(transformed_sample, transformed_label_image, prev_label, safety_pixels)
 
         #transform it
