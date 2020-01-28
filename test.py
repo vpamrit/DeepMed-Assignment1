@@ -51,7 +51,8 @@ def main(argv):
             pred_labels[1] /= float(height)
 
             print(f)
-            print("{0:.4f} {0:.4f}".format(pred_labels[0], pred_labels[1]))
+            print("X: {0:.4f}".format(pred_labels[0]))
+            print("Y: {0:.4f}".format(pred_labels[1]))
 
             if argv.visual_dir != '':
                 if argv.labels_file != '':
