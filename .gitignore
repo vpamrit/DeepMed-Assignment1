@@ -1,9 +1,9 @@
-	.ipynb_checkpoints/
-	__pycache__/
-	data.zip
-	data/
-	generated.zip
-	generated/
-	safe_model.py
-	visual/
+.ipynb_checkpoints/
+__pycache__/
+data.zip
+data/
+generated.zip
+generated/
+safe_model.py
+visual/
 
