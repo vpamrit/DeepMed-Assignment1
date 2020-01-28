@@ -136,7 +136,7 @@ def main(args):
 
         #save the model at the desired step
         if (epoch+1) % args.save_step == 0:
-          torch.save(net.state_dict(), args.saved_model_dir+"resnet"+str(epoch+1)+".pt")
+          torch.save(net.state_dict(), args.model_save_dir+"resnet"+str(epoch+1)+".pt")
 
         ##stopping conditions
         if failed_runs > 5 and prev_loss < loss:
