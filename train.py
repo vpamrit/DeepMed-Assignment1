@@ -5,6 +5,7 @@ import torchvision
 import numpy as np
 import os
 import model
+import matplotlib.pyplot as plt
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
