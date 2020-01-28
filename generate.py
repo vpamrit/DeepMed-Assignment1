@@ -1,17 +1,12 @@
 import torch
 import argparse
-import load_data
-from load_data import PhoneDataset
-
-import safetransforms as sft
+from torch.utils.data import DataLoader
 from PIL import Image
 
+#custom imports
 import load_data as ld
 from load_data import PhoneDataset, DatasetBuilder
-from torch.utils.data import DataLoader
-
-import visualize
-from visualize import TestVisualizer
+import safetransforms as sft
 
 def main(args):
     data = PhoneDataset(labels_file=args.label_file, root_dir=args.image_dir)
@@ -21,7 +16,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--image_dir', type=str, default='./data/train/', help='path to directory containig iamges to augment')
+    parser.add_argument('--image_dir', type=str, default='./data/train/', help='path to directory containig images to augment')
     parser.add_argument('--label_file', type=str, default='./data/labels/labels.txt', help='path to label file for images to augment')
     parser.add_argument('--generated_save_dir', type=str, default='./generated/train/', help='path to location to save generated images')
     parser.add_argument('--generated_labels_filename', type=str, default='./generated/labels.txt', help='path to new labels file to write new labels to')

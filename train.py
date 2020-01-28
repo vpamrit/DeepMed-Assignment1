@@ -18,9 +18,9 @@ IMG_HEIGHT = 326
 
 def main(args):
     #device configuration
-    if args.cpu:
+    if args.cpu != None:
         device = torch.device('cpu')
-    elif args.gpu:
+    elif args.gpu != None:
         if not torch.cuda_is_available():
             print("GPU / cuda reported as unavailable to torch")
             exit(0)
@@ -29,10 +29,10 @@ def main(args):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Create model directory
-    if not os.path.exists(args.saved_model_dir):
-        os.makedirs(args.saved_model_dir)
+    if not os.path.exists(args.model_save_dir):
+        os.makedirs(args.model_save_dir)
 
-    train_data = ld.get_data(labels_file=args.labels_file
+    train_data = ld.get_data(labels_file=args.labels_file,
                            root_dir=args.train_image_dir, mode="absolute");
 
     validation_data = ld.get_data(labels_file=args.labels_file,
@@ -45,17 +45,17 @@ def main(args):
     # Build the models
     if args.num_layers != None and args.block_type != None:
         if args.block_type == "bottleneck":
-            net = ResNet(Bottleneck, args.num_layers)
+            net = model.ResNet(model.Bottleneck, args.num_layers)
         else:
-            net = ResNet(BasicBlock, args.num_layers)
+            net = model.ResNet(model.BasicBlock, args.num_layers)
     else:
-        if args.model_type == 152:
+        if args.resnet_model == 152:
             net = model.ResNet152()
-        elif args.model_type == 101:
+        elif args.resnet_model == 101:
             net = model.ResNet101()
-        elif args.model_type == 50:
+        elif args.resnet_model == 50:
             net = model.ResNet50()
-        elif args.model_type == 34:
+        elif args.resnet_model == 34:
             net = model.ResNet34()
         else:
             net = model.ResNet101()
@@ -168,14 +168,15 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-train_image_dir', type=str, default='./generated/train/', help='path to training set')
-    parser.add_argument('-validation_image_dir', type=str, default='./generated/validation/', help='path to validation set')
-    parser.add_argument('-model_save_dir', type=str, default='./saved_models/', help='path to location to save models')
-    parser.add_argument('-save_step', type=int , default=4, help='step size for saving trained models')
-    parser.add_argument('-save_training_plot', type=str, const='./', help='location to save a plot showing testing and validation loss for the model')
+    parser.add_argument('--train_image_dir', type=str, default='./data/train/', help='path to training set')
+    parser.add_argument('--validation_image_dir', type=str, default='./data/validation/', help='path to validation set')
+    parser.add_argument('--labels_file', type=str, default='./data/labels/labels.txt', help='path to labels file for both validation and training datasets')
+    parser.add_argument('--model_save_dir', type=str, default='./saved_models/', help='path to location to save models')
+    parser.add_argument('--save_step', type=int , default=4, help='step size for saving trained models')
+    parser.add_argument('--save_training_plot', nargs='?', type=str, const='./', help='location to save a plot showing testing and validation loss for the model')
 
     # Model parameters
-    parser.add_argument('-optim', type=str, default="adam", help="options such as adagrad, adadelta, sgd, etc.")
+    parser.add_argument('--optim', type=str, default="adam", help="options such as adagrad, adadelta, sgd, etc.")
     parser.add_argument('--block_type', type=str, default="bottleneck", help='type of resnet layer (bottleneck or basic)')
     parser.add_argument('--num_layers', type=int , nargs=4, help='input of four space-separated integers (i.e. 1 2 30 2 ) where each number represents the number of blocks at that respective layer')
     parser.add_argument('--resnet_model', type=int , nargs=1, default=101, help='use to specify a pre-designed resnet model (18 34 50 101 152). NOTE: this option will be overriden if both num_layers and block_type are specified')
@@ -183,9 +184,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--validation_batch_size', type=int, default=2)
     parser.add_argument('--learning_rate', type=float, default=0.001)
-    parser.add_argument('--clipping_value', type=float, default=1.0, const=1.0)
-    parser.add_argument('--cpu', nargs='?', type=bool, default=False, const=True)
-    parser.add_argument('--gpu', nargs='?', type=bool, default=False, const=True)
+    parser.add_argument('--clipping_value', type=float, default=1.0)
+    parser.add_argument('--cpu', nargs='?', type=bool, const=True)
+    parser.add_argument('--gpu', nargs='?', type=bool, const=True)
     args = parser.parse_args()
 
     print(args)

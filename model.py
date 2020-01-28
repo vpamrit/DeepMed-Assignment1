@@ -38,7 +38,7 @@ class LambdaLayer(nn.Module):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1, option='A'):
+    def __init__(self, in_planes, planes, stride=1, option='A', dropout=0.25):
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
@@ -70,10 +70,11 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_planes, planes, stride=1, option='B'):
+    def __init__(self, in_planes, planes, stride=1, option='B', dropout=0.25):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
+        self.dropout = nn.Dropout2d(dropout)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, self.expansion*planes, kernel_size=1, bias=False)
@@ -95,6 +96,7 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
+        out = self.dropout(out)
         out = F.relu(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
         out += self.shortcut(x)
@@ -103,26 +105,26 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=2, option='B'):
+    def __init__(self, block, num_blocks, num_classes=2, option='B', dropout=0.25):
         super(ResNet, self).__init__()
         self.in_planes = 64
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
 
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=3, option=option)
-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2, option=option)
-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=3, option=option)
-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2, option=option)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=3, option=option, dropout=dropout)
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2, option=option, dropout=dropout)
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=3, option=option, dropout=dropout)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2, option=option, dropout=dropout)
 
         self.linear = nn.Linear(71680, num_classes)
         self._initialize_weights()
 
-    def _make_layer(self, block, planes, num_blocks, stride, option):
+    def _make_layer(self, block, planes, num_blocks, stride, option, dropout):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, option))
+            layers.append(block(self.in_planes, planes, stride, option, dropout))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
