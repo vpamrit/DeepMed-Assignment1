@@ -22,7 +22,11 @@ def get_data(labels_file, root_dir, transform=None, mode="relative"):
 
 
 def read_txt(root_dir, labels_file):
-    files = [f for f in os.listdir(root_dir) if isfile(join(root_dir, f))]
+
+    if isfile(root_dir):
+        files = [root_dir.split('/')[-1]]
+    else:
+        files = [f for f in os.listdir(root_dir) if isfile(join(root_dir, f))]
 
     labels = [ [line.split(' ',1)[0], float(line.split(' ',2)[1]), float(line.split(' ',2)[2])] for line in open(labels_file) if (line.split(' ',1)[0] in files)]
     labels = sorted(labels, key=lambda tup: int(tup[0].split('.',1)[0]))

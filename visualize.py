@@ -21,7 +21,7 @@ class TestVisualizer:
 
   def draw_rect(self, im, val1, val2, color='red'):
       width, height = im.size
-      radius = 30
+      radius = 30.0
       draw = ImageDraw.Draw(im)
       draw.rectangle((val1*width-radius, val2*height-radius, val1*width+radius, val2*height+radius), fill=None, outline=color)
 
@@ -40,7 +40,7 @@ class TestVisualizer:
 
   def get_error(self):
     if self.pred == None:
-      self.pred = [0, 0]
+        return inf
 
     return pow(pow(self.pred[0]-self.actual[0], 2) + pow(self.pred[1] - self.actual[1], 2), 1/2)
 
