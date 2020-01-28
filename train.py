@@ -45,20 +45,20 @@ def main(args):
     # Build the models
     if args.num_layers != None and args.block_type != None:
         if args.block_type == "bottleneck":
-            net = model.ResNet(model.Bottleneck, args.num_layers)
+            net = model.ResNet(model.Bottleneck, args.num_layers, dropout=args.dropout)
         else:
-            net = model.ResNet(model.BasicBlock, args.num_layers)
+            net = model.ResNet(model.BasicBlock, args.num_layers, dropout=args.dropout)
     else:
         if args.resnet_model == 152:
-            net = model.ResNet152()
+            net = model.ResNet152(args.dropout)
         elif args.resnet_model == 101:
-            net = model.ResNet101()
+            net = model.ResNet101(args.dropout)
         elif args.resnet_model == 50:
-            net = model.ResNet50()
+            net = model.ResNet50(args.dropout)
         elif args.resnet_model == 34:
-            net = model.ResNet34()
+            net = model.ResNet34(args.dropout)
         else:
-            net = model.ResNet101()
+            net = model.ResNet101(args.dropout)
 
     #load the model to the appropriate device
     net = net.to(device)
@@ -185,6 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('--validation_batch_size', type=int, default=2)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--clipping_value', type=float, default=1.0)
+    parser.add_argument('--dropout', type=float, default=0.25)
     parser.add_argument('--cpu', nargs='?', type=bool, const=True)
     parser.add_argument('--gpu', nargs='?', type=bool, const=True)
     args = parser.parse_args()

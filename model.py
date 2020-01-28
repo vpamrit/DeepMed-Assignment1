@@ -154,17 +154,17 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 
-def ResNet18():
-    return ResNet(BasicBlock, [2,2,2,2])
+def ResNet18(dropout=0.25):
+    return ResNet(BasicBlock, [2,2,2,2], dropout=dropout)
 
-def ResNet34():
-    return ResNet(BasicBlock, [3,4,6,3])
+def ResNet34(dropout=0.25):
+    return ResNet(BasicBlock, [3,4,6,3], dropout=dropout)
 
-def ResNet50():
-    return ResNet(Bottleneck, [3,4,6,3])
+def ResNet50(dropout=0.25):
+    return ResNet(Bottleneck, [3,4,6,3], dropout=dropout)
 
-def ResNet101():
-    return ResNet(Bottleneck, [3,4,23,3])
+def ResNet101(dropout=0.25):
+    return ResNet(Bottleneck, [3,4,23,3], dropout=dropout)
 
-def ResNet152():
-    return ResNet(Bottleneck, [3,8,36,3])
+def ResNet152(dropout=0.25):
+    return ResNet(Bottleneck, [3,8,36,3], dropout=dropout)
